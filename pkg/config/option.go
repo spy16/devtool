@@ -9,16 +9,32 @@ import (
 	"github.com/spf13/viper"
 )
 
-// CobraPreRunHook can be used with cobra CLI library PreRunE feature to initialize
-// required  configurations before  running commands. Config struct  pointed by the
-// passed in pointer will be populated with the configs when the hook is executed.
-func CobraPreRunHook(envPrefix, configName string) func(*cobra.Command, []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		configFile, _ := cmd.Flags().GetString("config")
-		if err := viperInit(envPrefix, configName, configFile); err != nil {
-			return err
+type Option func(l *viperLoader) error
+
+func WithEnv(prefix ...string) Option {
+	return func(l *viperLoader) error {
+		l.useEnv = true
+		if len(prefix) > 0 {
+			l.envPrefix = strings.TrimSpace(prefix[0])
 		}
-		bindFlags(envPrefix, cmd, viper.GetViper())
+		return nil
+	}
+}
+
+func WithFile(file string) Option {
+	return func(l *viperLoader) error {
+		l.confFile = file
+		return nil
+	}
+}
+
+func WithCobra(cmd *cobra.Command) Option {
+	return func(l *viperLoader) error {
+		configFile, _ := cmd.Flags().GetString("config")
+		if configFile != "" {
+			l.confFile = configFile
+		}
+		// TODO: bind flags.
 		return nil
 	}
 }

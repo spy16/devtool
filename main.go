@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -20,6 +21,8 @@ var (
 	Commit  = "N/A"
 	BuiltOn = "N/A"
 
+	cfg appConfigs
+
 	rootCmd = &cobra.Command{
 		Use:     appName,
 		Short:   "A toolbox for developers providing random useful utilities",
@@ -34,7 +37,17 @@ func main() {
 	defer cancel()
 
 	rootCmd.PersistentFlags().StringP("config", "c", "", "Override config file")
-	rootCmd.PersistentPreRunE = config.CobraPreRunHook("", appName)
+	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		opts := []config.Option{
+			config.WithEnv(),
+			config.WithCobra(cmd),
+		}
+
+		if err := config.Load(&cfg, opts...); err != nil {
+			fmt.Printf("failed to load configs: %v\n", err)
+			os.Exit(1)
+		}
+	}
 
 	rootCmd.AddCommand(
 		cmdServe(ctx),
@@ -42,3 +55,5 @@ func main() {
 
 	_ = rootCmd.Execute()
 }
+
+type appConfigs struct{}
