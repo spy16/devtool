@@ -1,0 +1,9 @@
+{
+  "workers": 10,
+  "group_id": "copycat-testing",
+  "source_addr": "localhost:9092",
+  "target_addr": "localhost:9092",
+  "source_topic": "foo1",
+  "target_topic": "foo2",
+  "start_offset": "earliest"
+}
